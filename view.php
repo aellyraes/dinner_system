@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Seating Details</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 32px 24px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .header-tag {
+            color: #38bdf8;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .name {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        .info-group {
+            background-color: #0f172a;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #1e293b;
+            text-align: left;
+        }
+        .label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .value {
+            font-size: 16px;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+        .table-badge {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 14px;
+            margin-top: 24px;
+        }
+        .table-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        .table-number {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-tag">Company Annual Dinner</div>
+    <div class="name" id="guestName">Loading Guest...</div>
+    
+    <div class="info-group">
+        <div class="label">Pangkat / Designation</div>
+        <div class="value" id="guestRank">-</div>
+    </div>
+    
+    <div class="info-group">
+        <div class="label">Department</div>
+        <div class="value" id="guestDept">-</div>
+    </div>
+    
+    <div class="table-badge">
+        <div class="table-label">Assigned Table</div>
+        <div class="table-number" id="guestTable">TABLE --</div>
+    </div>
+</div>
+
+<script>
+    // Extract parameters from URL query string
+    const params = new URLSearchParams(window.location.search);
+    
+    const name = params.get('name');
+    const rank = params.get('rank');
+    const dept = params.get('dept');
+    const table = params.get('table');
+
+    // Populate data into HTML tags
+    document.getElementById('guestName').textContent = name ? decodeURIComponent(name) : 'Guest Not Found';
+    document.getElementById('guestRank').textContent = rank ? decodeURIComponent(rank) : '-';
+    document.getElementById('guestDept').textContent = dept ? decodeURIComponent(dept) : '-';
+    document.getElementById('guestTable').textContent = table ? decodeURIComponent(table) : 'N/A';
+</script>
+
+</body>
+</html>
