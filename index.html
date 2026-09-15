@@ -107,7 +107,6 @@
 </div>
 
 <script>
-    // Extract parameters from URL query string
     const params = new URLSearchParams(window.location.search);
     
     const name = params.get('name');
@@ -115,7 +114,6 @@
     const dept = params.get('dept');
     const table = params.get('table');
 
-    // Populate data into HTML tags
     document.getElementById('guestName').textContent = name ? decodeURIComponent(name) : 'Guest Not Found';
     document.getElementById('guestRank').textContent = rank ? decodeURIComponent(rank) : '-';
     document.getElementById('guestDept').textContent = dept ? decodeURIComponent(dept) : '-';
