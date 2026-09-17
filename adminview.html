@@ -16,7 +16,7 @@
 <body>
 
     <h2>Usher Scanner</h2>
-    <p>Point camera at guest email QR code</p>
+    <p>Arahkan kamera ke QR tiket emel tetamu</p>
     
     <div id="reader"></div>
 
@@ -28,9 +28,11 @@
             isScanning = false;
 
             if (decodedText.startsWith("http://") || decodedText.startsWith("https://")) {
-                window.location.href = decodedText;
+                // Padam viewonly=true dan tukar kepada admin=true
+                let adminUrl = decodedText.replace("&viewonly=true", "") + "&admin=true";
+                window.location.href = adminUrl;
             } else {
-                alert("Scanned Code: " + decodedText + "\n\nPlease resend invitation emails to generate updated QR links!");
+                alert("QR Code Tidak Sah!");
                 isScanning = true;
             }
         }
