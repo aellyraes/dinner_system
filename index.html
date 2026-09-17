@@ -152,17 +152,20 @@
         document.getElementById("statusMsg").style.color = "#38bdf8";
         document.getElementById("statusMsg").textContent = "Updating Google Sheet...";
 
-        fetch(`${decodeURIComponent(webAppUrl)}?action=checkin&row=${row}`)
-            .then(res => res.text())
-            .then(data => {
-                document.getElementById("statusMsg").style.color = "#10b981";
-                document.getElementById("statusMsg").textContent = "✓ Status & Check-In Time Updated!";
-                document.getElementById("attendBtn").style.display = "none";
-            })
-            .catch(err => {
-                document.getElementById("statusMsg").style.color = "#ef4444";
-                document.getElementById("statusMsg").textContent = "Error updating Google Sheet.";
-            });
+        // mode: 'no-cors' prevents browser blocking when calling Apps Script Web App
+        fetch(`${decodeURIComponent(webAppUrl)}?action=checkin&row=${row}`, {
+            method: 'GET',
+            mode: 'no-cors'
+        })
+        .then(() => {
+            document.getElementById("statusMsg").style.color = "#10b981";
+            document.getElementById("statusMsg").textContent = "✓ Status & Check-In Time Updated!";
+            document.getElementById("attendBtn").style.display = "none";
+        })
+        .catch(err => {
+            document.getElementById("statusMsg").style.color = "#ef4444";
+            document.getElementById("statusMsg").textContent = "Error updating Google Sheet.";
+        });
     }
 </script>
 
