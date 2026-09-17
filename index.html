@@ -128,8 +128,8 @@
         <div class="table-number" id="guestTable">TABLE --</div>
     </div>
 
-    <!-- Hidden form submission directly triggers check-in -->
-    <form id="checkinForm" action="https://script.google.com/macros/s/AKfycbyc9wXQ0wV1_PLACEHOLDER/exec" method="GET">
+    <!-- Hidden form submission triggering Apps Script -->
+    <form id="checkinForm" action="https://script.google.com/macros/s/AKfycbybccshzhwTT0oFtmxj7kDSf-HsBlStESGCSlLdP8rYkM_SN5jl84pCidZm3cj7ME4SRw/exec" method="GET">
         <input type="hidden" name="row" id="formRow">
         <input type="hidden" name="name" id="formName">
         <input type="hidden" name="rank" id="formRank">
@@ -167,7 +167,6 @@
     document.getElementById('formDept').value = dept || '';
     document.getElementById('formTable').value = table || '';
 
-    // If returning from Google Apps Script after check-in, update UI
     if (status === 'success') {
         document.getElementById('attendBtn').style.display = 'none';
         document.getElementById('statusBox').style.display = 'block';
