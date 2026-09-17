@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usher Admin Check-In</title>
+    <title>Usher Scanner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         * { box-sizing: border-box; }
@@ -12,99 +12,40 @@
         p { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
         
         #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 2px solid #334155; background: #1e293b; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 20px; }
-        .card { background: #1e293b; padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .name { font-size: 24px; font-weight: 800; color: #ffffff; margin-bottom: 15px; }
-        .info { background: #0f172a; padding: 12px; border-radius: 10px; margin-bottom: 8px; text-align: left; font-size: 14px; color: #94a3b8; }
-        .info b { color: #f8fafc; float: right; }
-        .badge { background: #2563eb; color: white; font-size: 28px; font-weight: 900; padding: 14px; border-radius: 12px; margin: 15px 0; }
-        
-        .btn-attend { background: #10b981; color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-attend:active { background: #059669; }
-        .btn-close { background: #64748b; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; font-size: 14px; cursor: pointer; margin-top: 10px; }
-        
-        #statusMsg { font-size: 14px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h2>Usher Check-In System</h2>
-    <p>Scan guest ticket QR code</p>
+    <h2>Usher Scanner</h2>
+    <p>Point camera at guest email QR code</p>
     
     <div id="reader"></div>
 
-    <!-- Guest Details Confirmation Modal -->
-    <div class="modal" id="guestModal">
-        <div class="card">
-            <div class="name" id="mName">Guest Name</div>
-            <div class="info">Rank: <b id="mRank">-</b></div>
-            <div class="info">Dept: <b id="mDept">-</b></div>
-            <div class="badge" id="mTable">TABLE --</div>
-            
-            <button class="btn-attend" id="attendBtn" onclick="confirmAttendance()">✓ Confirm Attend</button>
-            <div id="statusMsg"></div>
-            <button class="btn-close" onclick="closeModal()">Scan Next Guest</button>
-        </div>
-    </div>
-
     <script>
-        let scannedRow = null;
-        let webAppUrl = ""; // Populated dynamically from QR or setup
+        let isScanning = true;
 
         function onScanSuccess(decodedText) {
-            try {
-                // Parse URL parameters from scanned QR link
-                const url = new URL(decodedText);
-                scannedRow = url.searchParams.get("row");
-                const name = url.searchParams.get("name") || "Guest";
-                const rank = url.searchParams.get("rank") || "-";
-                const dept = url.searchParams.get("dept") || "-";
-                const table = url.searchParams.get("table") || "-";
-                
-                // Extract Apps Script Web App base URL dynamically
-                webAppUrl = url.origin + url.pathname;
+            if (!isScanning) return;
+            isScanning = false;
 
-                // Populate modal
-                document.getElementById("mName").textContent = decodeURIComponent(name);
-                document.getElementById("mRank").textContent = decodeURIComponent(rank);
-                document.getElementById("mDept").textContent = decodeURIComponent(dept);
-                document.getElementById("mTable").textContent = decodeURIComponent(table);
-                
-                document.getElementById("statusMsg").textContent = "";
-                document.getElementById("attendBtn").style.display = "block";
-                document.getElementById("guestModal").style.display = "flex";
-            } catch (e) {
+            // Immediately redirect to index.html with all parameters from QR
+            if (decodedText.startsWith("http://") || decodedText.startsWith("https://")) {
+                window.location.href = decodedText;
+            } else {
                 alert("Invalid QR Code structure!");
+                isScanning = true;
             }
         }
 
-        function confirmAttendance() {
-            if (!scannedRow) return;
-            
-            document.getElementById("statusMsg").style.color = "#38bdf8";
-            document.getElementById("statusMsg").textContent = "Updating Google Sheet...";
-
-            // Call Google Apps Script WebApp in background to update Sheet
-            fetch(`${webAppUrl}?action=checkin&row=${scannedRow}`)
-                .then(res => res.text())
-                .then(data => {
-                    document.getElementById("statusMsg").style.color = "#10b981";
-                    document.getElementById("statusMsg").textContent = "✓ Status & Time Updated in Sheet!";
-                    document.getElementById("attendBtn").style.display = "none";
-                })
-                .catch(err => {
-                    document.getElementById("statusMsg").style.color = "#ef4444";
-                    document.getElementById("statusMsg").textContent = "Error updating Google Sheet.";
-                });
-        }
-
-        function closeModal() {
-            document.getElementById("guestModal").style.display = "none";
-        }
-
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
+        // Initialize camera using back camera by default
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess
+        ).catch(err => {
+            console.error("Camera access error:", err);
+        });
     </script>
 </body>
 </html>
