@@ -96,10 +96,15 @@
             font-size: 14px;
             margin-top: 10px;
         }
-        #statusMsg {
-            font-size: 14px;
+        .status-success {
+            color: #10b981;
+            font-size: 16px;
             font-weight: bold;
-            margin-top: 12px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            border: 1px solid #10b981;
         }
     </style>
 </head>
@@ -123,8 +128,21 @@
         <div class="table-number" id="guestTable">TABLE --</div>
     </div>
 
-    <button class="btn-attend" id="attendBtn" onclick="confirmAttendance()">✓ Confirm Attend</button>
-    <div id="statusMsg"></div>
+    <!-- Hidden form submission directly triggers check-in -->
+    <form id="checkinForm" action="https://script.google.com/macros/s/AKfycbyc9wXQ0wV1_PLACEHOLDER/exec" method="GET">
+        <input type="hidden" name="row" id="formRow">
+        <input type="hidden" name="name" id="formName">
+        <input type="hidden" name="rank" id="formRank">
+        <input type="hidden" name="dept" id="formDept">
+        <input type="hidden" name="table" id="formTable">
+        
+        <button type="submit" class="btn-attend" id="attendBtn">✓ Confirm Attend</button>
+    </form>
+
+    <div id="statusBox" style="display: none;" class="status-success">
+        ✓ Status & Check-In Time Updated!
+    </div>
+
     <a href="adminview.html" class="btn-back">Scan Next Guest</a>
 </div>
 
@@ -136,36 +154,23 @@
     const dept = params.get('dept');
     const table = params.get('table');
     const row = params.get('row');
-    const webAppUrl = params.get('webApp');
+    const status = params.get('status');
 
     document.getElementById('guestName').textContent = name ? decodeURIComponent(name) : 'Guest Not Found';
     document.getElementById('guestRank').textContent = rank ? decodeURIComponent(rank) : '-';
     document.getElementById('guestDept').textContent = dept ? decodeURIComponent(dept) : '-';
     document.getElementById('guestTable').textContent = table ? decodeURIComponent(table) : 'N/A';
 
-    function confirmAttendance() {
-        if (!row || !webAppUrl) {
-            alert("Missing check-in parameters!");
-            return;
-        }
+    document.getElementById('formRow').value = row || '';
+    document.getElementById('formName').value = name || '';
+    document.getElementById('formRank').value = rank || '';
+    document.getElementById('formDept').value = dept || '';
+    document.getElementById('formTable').value = table || '';
 
-        document.getElementById("statusMsg").style.color = "#38bdf8";
-        document.getElementById("statusMsg").textContent = "Updating Google Sheet...";
-
-        // mode: 'no-cors' prevents browser blocking when calling Apps Script Web App
-        fetch(`${decodeURIComponent(webAppUrl)}?action=checkin&row=${row}`, {
-            method: 'GET',
-            mode: 'no-cors'
-        })
-        .then(() => {
-            document.getElementById("statusMsg").style.color = "#10b981";
-            document.getElementById("statusMsg").textContent = "✓ Status & Check-In Time Updated!";
-            document.getElementById("attendBtn").style.display = "none";
-        })
-        .catch(err => {
-            document.getElementById("statusMsg").style.color = "#ef4444";
-            document.getElementById("statusMsg").textContent = "Error updating Google Sheet.";
-        });
+    // If returning from Google Apps Script after check-in, update UI
+    if (status === 'success') {
+        document.getElementById('attendBtn').style.display = 'none';
+        document.getElementById('statusBox').style.display = 'block';
     }
 </script>
 
