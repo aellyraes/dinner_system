@@ -71,7 +71,6 @@
             document.getElementById('scannerSection').style.display = 'none';
             document.getElementById('detailsCard').style.display = 'block';
 
-            // Parse text QR Code (ROW:x|NAME:x|RANK:x|DEPT:x|TABLE:x)
             const parts = decodedText.split('|');
             parts.forEach(part => {
                 const [key, val] = part.split(':');
