@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAINS Dinner - Admin Check-In</title>
+  <title>SAINS Dinner - Admin Scanner</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #121212;
@@ -25,7 +28,6 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
       border: 1px solid #800000;
       text-align: center;
-      box-sizing: border-box;
     }
     h1 {
       color: #ff4d4d;
@@ -97,10 +99,6 @@
     .btn:hover {
       background-color: #a00000;
     }
-    .btn:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
@@ -110,14 +108,13 @@
     <p>Scan guest QR code to register attendance</p>
 
     <div id="reader"></div>
-
     <div id="result" class="result-box"></div>
 
     <button id="reset-btn" class="btn" onclick="resetScanner()" style="display:none;">Scan Next Guest</button>
   </div>
 
   <script>
-    // DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+    // YOUR DEPLOYED GOOGLE APPS SCRIPT EXEC URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVU3KaCE1h4rHJky3qOeollVDUiELpMLHh8oWtrpGBAo6qBJP-p7nnQ9QEkkAkJMyKog/exec";
 
     let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
@@ -127,7 +124,7 @@
       if (isProcessing) return;
       isProcessing = true;
 
-      // Stop camera scan while sending request
+      // Stop scanner while processing
       html5QrcodeScanner.clear();
 
       const resultDiv = document.getElementById("result");
@@ -135,7 +132,7 @@
       resultDiv.style.display = "block";
       resultDiv.innerHTML = "<p>⏳ Updating Google Sheet attendance...</p>";
 
-      // Send GET request to Apps Script Web App
+      // Send HTTP GET request to Google Apps Script
       const targetUrl = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&t=${new Date().getTime()}`;
 
       fetch(targetUrl, {
@@ -149,7 +146,7 @@
         if (data.status === "success") {
           resultDiv.className = "result-box success";
           resultDiv.innerHTML = `
-            <h3>✅ Check-In Successful!</h3>
+            <h3>✅ ${data.message}</h3>
             <div class="info-row"><strong>Name:</strong> ${data.name}</div>
             <div class="info-row"><strong>Rank/Dept:</strong> ${data.rank || '-'} (${data.dept || '-'})</div>
             <div class="info-row"><span class="badge-table">TABLE ${data.table}</span></div>
@@ -160,7 +157,7 @@
         } else if (data.status === "warning") {
           resultDiv.className = "result-box warning";
           resultDiv.innerHTML = `
-            <h3>⚠️ Guest Already Checked-In</h3>
+            <h3>⚠️ ${data.message}</h3>
             <div class="info-row"><strong>Name:</strong> ${data.name}</div>
             <div class="info-row"><span class="badge-table">TABLE ${data.table}</span></div>
             <div class="info-row" style="margin-top: 10px; font-size: 11px;">
@@ -176,7 +173,7 @@
         console.error("Fetch Error:", error);
         document.getElementById("reset-btn").style.display = "block";
         resultDiv.className = "result-box error";
-        resultDiv.innerHTML = `<h3>❌ Connection Failed</h3><p>Could not update Google Sheet. Please check connection.</p>`;
+        resultDiv.innerHTML = `<h3>❌ Connection Failed</h3><p>Could not update Google Sheet. Verify internet connection.</p>`;
       });
     }
 
@@ -187,7 +184,7 @@
       html5QrcodeScanner.render(onScanSuccess);
     }
 
-    // Start scanner on page load
+    // Initialize scanner
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
