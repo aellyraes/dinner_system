@@ -1,118 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #0f172a; color: #ffffff; text-align: center; margin: 0; padding: 20px; }
-        .card { background-color: #1e293b; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; margin: 0 auto; border: 1px solid #334155; }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 2px solid #334155; }
-        .info-box { background-color: #0f172a; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: left; }
-        .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-        .value { font-size: 16px; color: #ffffff; font-weight: bold; }
-        .btn-attend { background: #10b981; color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .btn-reset { background: #475569; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-size: 14px; margin-top: 10px; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAINS Dinner - Admin Check-In</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border: 1px solid #800000;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    h1 {
+      color: #ff4d4d;
+      margin-bottom: 5px;
+      font-size: 22px;
+    }
+    p {
+      color: #aaaaaa;
+      font-size: 13px;
+    }
+    #reader {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #333;
+    }
+    .result-box {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+      text-align: left;
+    }
+    .success {
+      background-color: #1b4332;
+      border: 1px solid #2d6a4f;
+      color: #d8f3dc;
+    }
+    .warning {
+      background-color: #5c3d11;
+      border: 1px solid #855314;
+      color: #ffe8cc;
+    }
+    .error {
+      background-color: #4a1212;
+      border: 1px solid #7a1c1c;
+      color: #ffcdd2;
+    }
+    .result-box h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+    .info-row {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+    .badge-table {
+      display: inline-block;
+      background: #800000;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .btn {
+      margin-top: 15px;
+      padding: 12px 20px;
+      background-color: #800000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      font-size: 15px;
+    }
+    .btn:hover {
+      background-color: #a00000;
+    }
+    .btn:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
 <body>
 
-    <h2 style="color: #38bdf8;">Admin Attendance Scanner</h2>
+  <div class="container">
+    <h1>SAINS Admin QR Scanner</h1>
+    <p>Scan guest QR code to register attendance</p>
 
-    <div id="scannerSection">
-        <p style="color: #94a3b8;">Arahkan kamera ke QR tiket tetamu</p>
-        <div id="reader"></div>
-    </div>
+    <div id="reader"></div>
 
-    <div id="detailsCard" class="card" style="display: none;">
-        <h3 id="guestName" style="margin-top:0; color:#38bdf8;">-</h3>
-        
-        <div class="info-box">
-            <div class="label">Pangkat / Designation</div>
-            <div class="value" id="guestRank">-</div>
-        </div>
+    <div id="result" class="result-box"></div>
 
-        <div class="info-box">
-            <div class="label">Department</div>
-            <div class="value" id="guestDept">-</div>
-        </div>
+    <button id="reset-btn" class="btn" onclick="resetScanner()" style="display:none;">Scan Next Guest</button>
+  </div>
 
-        <div class="info-box" style="background:#2563eb; text-align:center;">
-            <div class="label" style="color:#e0e7ff;">Table Number</div>
-            <div class="value" id="guestTable" style="font-size:28px;">-</div>
-        </div>
+  <script>
+    // DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVU3KaCE1h4rHJky3qOeollVDUiELpMLHh8oWtrpGBAo6qBJP-p7nnQ9QEkkAkJMyKog/exec";
 
-        <button class="btn-attend" id="btnConfirm" onclick="confirmAttendance()">✓ Confirm Attend</button>
-        <button class="btn-reset" onclick="resetScanner()">Scan Next Guest</button>
-    </div>
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    let isProcessing = false;
 
-    <script>
-        let html5QrCode;
-        let selectedRow = null;
+    function onScanSuccess(decodedText, decodedResult) {
+      if (isProcessing) return;
+      isProcessing = true;
 
-        function startScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                onScanSuccess
-            ).catch(err => console.error("Camera error:", err));
+      // Stop camera scan while sending request
+      html5QrcodeScanner.clear();
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.className = "result-box";
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = "<p>⏳ Updating Google Sheet attendance...</p>";
+
+      // Send GET request to Apps Script Web App
+      const targetUrl = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&t=${new Date().getTime()}`;
+
+      fetch(targetUrl, {
+        method: "GET",
+        redirect: "follow"
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("reset-btn").style.display = "block";
+
+        if (data.status === "success") {
+          resultDiv.className = "result-box success";
+          resultDiv.innerHTML = `
+            <h3>✅ Check-In Successful!</h3>
+            <div class="info-row"><strong>Name:</strong> ${data.name}</div>
+            <div class="info-row"><strong>Rank/Dept:</strong> ${data.rank || '-'} (${data.dept || '-'})</div>
+            <div class="info-row"><span class="badge-table">TABLE ${data.table}</span></div>
+            <div class="info-row" style="margin-top: 10px; font-size: 11px; opacity: 0.8;">
+              Status: Checked-In | Time: ${data.checkInTime}
+            </div>
+          `;
+        } else if (data.status === "warning") {
+          resultDiv.className = "result-box warning";
+          resultDiv.innerHTML = `
+            <h3>⚠️ Guest Already Checked-In</h3>
+            <div class="info-row"><strong>Name:</strong> ${data.name}</div>
+            <div class="info-row"><span class="badge-table">TABLE ${data.table}</span></div>
+            <div class="info-row" style="margin-top: 10px; font-size: 11px;">
+              Check-in Time: ${data.checkInTime || 'Previously recorded'}
+            </div>
+          `;
+        } else {
+          resultDiv.className = "result-box error";
+          resultDiv.innerHTML = `<h3>❌ Error</h3><p>${data.message || 'Unknown server error'}</p>`;
         }
+      })
+      .catch(error => {
+        console.error("Fetch Error:", error);
+        document.getElementById("reset-btn").style.display = "block";
+        resultDiv.className = "result-box error";
+        resultDiv.innerHTML = `<h3>❌ Connection Failed</h3><p>Could not update Google Sheet. Please check connection.</p>`;
+      });
+    }
 
-        function onScanSuccess(decodedText) {
-            if (!decodedText.includes("ROW:")) {
-                alert("QR Code ini tidak sah!");
-                return;
-            }
+    function resetScanner() {
+      isProcessing = false;
+      document.getElementById("result").style.display = "none";
+      document.getElementById("reset-btn").style.display = "none";
+      html5QrcodeScanner.render(onScanSuccess);
+    }
 
-            html5QrCode.stop();
-            document.getElementById('scannerSection').style.display = 'none';
-            document.getElementById('detailsCard').style.display = 'block';
-
-            const parts = decodedText.split('|');
-            parts.forEach(part => {
-                const [key, val] = part.split(':');
-                if (key === 'ROW') selectedRow = val;
-                if (key === 'NAME') document.getElementById('guestName').textContent = val;
-                if (key === 'RANK') document.getElementById('guestRank').textContent = val;
-                if (key === 'DEPT') document.getElementById('guestDept').textContent = val;
-                if (key === 'TABLE') document.getElementById('guestTable').textContent = `TABLE ${val}`;
-            });
-        }
-
-        function confirmAttendance() {
-            if (!selectedRow) return;
-            
-            const btn = document.getElementById('btnConfirm');
-            btn.textContent = "Updating Sheet...";
-            btn.disabled = true;
-
-            const webAppUrl = `https://script.google.com/macros/s/AKfycbzntQuKo2sIYhWwiPxmDjViK6qfdiKpK1_PGlx19SOXoRVmQ7-3PBn5LHtsswPlL2VXkQ/exec?row=${selectedRow}`;
-
-            fetch(webAppUrl, { mode: 'no-cors' })
-                .then(() => {
-                    btn.textContent = "✓ Attendance Saved!";
-                    btn.style.background = "#059669";
-                })
-                .catch(() => {
-                    alert("Error updating attendance.");
-                    btn.disabled = false;
-                    btn.textContent = "✓ Confirm Attend";
-                });
-        }
-
-        function resetScanner() {
-            document.getElementById('detailsCard').style.display = 'none';
-            document.getElementById('scannerSection').style.display = 'block';
-            document.getElementById('btnConfirm').disabled = false;
-            document.getElementById('btnConfirm').style.background = "#10b981";
-            document.getElementById('btnConfirm').textContent = "✓ Confirm Attend";
-            startScanner();
-        }
-
-        startScanner();
-    </script>
+    // Start scanner on page load
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
 </body>
 </html>
