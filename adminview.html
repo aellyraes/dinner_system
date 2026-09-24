@@ -190,7 +190,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygLxLN_h9D6AOCyci8Fh9eq8CgqAGWY8CZsO5v4QRNKumFuTMzxCUFHjcTNR1zks_U/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJerNogkOgSTUcFvyJAjvZf6K1A9EOXzLlx5opAop4EqYiTwCd6wpEIYdeCXyuEXX5kA/exec";
 
     let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
       fps: 15, 
@@ -199,7 +199,7 @@
     });
     let isProcessing = false;
 
-    // Callback global untuk JSONP
+    // Response handler daripada Apps Script
     window.handleAppsScriptResponse = function(data) {
       document.getElementById("reset-btn").style.display = "block";
       const resultDiv = document.getElementById("result");
@@ -248,7 +248,7 @@
       const existingScript = document.getElementById("jsonp-script");
       if (existingScript) existingScript.remove();
 
-      // Teknik Script Injection untuk melepasi sekatan CORS Browser
+      // JSONP Injection
       const script = document.createElement("script");
       script.id = "jsonp-script";
       script.src = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&callback=handleAppsScriptResponse&t=${new Date().getTime()}`;
