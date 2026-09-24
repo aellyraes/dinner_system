@@ -84,10 +84,6 @@
       width: 100%;
     }
 
-    #reader video {
-      object-fit: cover;
-    }
-
     .result-card {
       margin-top: 20px;
       padding: 18px;
@@ -174,20 +170,6 @@
     .btn:hover {
       background-color: var(--primary-hover);
     }
-
-    /* Adjust html5-qrcode standard elements */
-    #reader__scan_region {
-      background: #000;
-    }
-    #reader button {
-      padding: 8px 16px;
-      background: var(--primary);
-      color: white;
-      border: 1px solid var(--accent-gold);
-      border-radius: 4px;
-      margin: 10px 0;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -208,7 +190,6 @@
   </div>
 
   <script>
-    // GOOGLE APPS SCRIPT WEB APP URL (EXEC ENDPOINT)
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygLxLN_h9D6AOCyci8Fh9eq8CgqAGWY8CZsO5v4QRNKumFuTMzxCUFHjcTNR1zks_U/exec";
 
     let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
@@ -218,11 +199,45 @@
     });
     let isProcessing = false;
 
+    // Callback global untuk JSONP
+    window.handleAppsScriptResponse = function(data) {
+      document.getElementById("reset-btn").style.display = "block";
+      const resultDiv = document.getElementById("result");
+
+      if (data.status === "success") {
+        resultDiv.className = "result-card success";
+        resultDiv.innerHTML = `
+          <div class="status-badge">VALID PASS - CHECKED IN</div>
+          <div class="guest-name">${data.name}</div>
+          <div class="info-line"><strong>Designation:</strong> ${data.rank || '-'}</div>
+          <div class="info-line"><strong>Agency/Dept:</strong> ${data.dept || '-'}</div>
+          <div class="time-stamp">RECORDED AT: ${data.checkInTime}</div>
+        `;
+      } else if (data.status === "warning") {
+        resultDiv.className = "result-card warning";
+        resultDiv.innerHTML = `
+          <div class="status-badge">ALREADY CHECKED IN</div>
+          <div class="guest-name">${data.name}</div>
+          <div class="info-line"><strong>Designation:</strong> ${data.rank || '-'}</div>
+          <div class="info-line"><strong>Agency/Dept:</strong> ${data.dept || '-'}</div>
+          <div class="time-stamp">INITIAL CHECK-IN: ${data.checkInTime || 'RECORDED'}</div>
+        `;
+      } else {
+        resultDiv.className = "result-card error";
+        resultDiv.innerHTML = `
+          <div class="status-badge">INVALID PASS</div>
+          <div class="info-line">${data.message || 'System error encountered'}</div>
+        `;
+      }
+
+      const oldScript = document.getElementById("jsonp-script");
+      if (oldScript) oldScript.remove();
+    };
+
     function onScanSuccess(decodedText, decodedResult) {
       if (isProcessing) return;
       isProcessing = true;
 
-      // Hentikan seketika kamera
       html5QrcodeScanner.clear();
 
       const resultDiv = document.getElementById("result");
@@ -230,51 +245,24 @@
       resultDiv.style.display = "block";
       resultDiv.innerHTML = `<div class="info-line" style="text-align: center;">Verifying pass details...</div>`;
 
-      const targetUrl = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&t=${new Date().getTime()}`;
+      const existingScript = document.getElementById("jsonp-script");
+      if (existingScript) existingScript.remove();
 
-      fetch(targetUrl, {
-        method: "GET",
-        redirect: "follow"
-      })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById("reset-btn").style.display = "block";
+      // Teknik Script Injection untuk melepasi sekatan CORS Browser
+      const script = document.createElement("script");
+      script.id = "jsonp-script";
+      script.src = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&callback=handleAppsScriptResponse&t=${new Date().getTime()}`;
 
-        if (data.status === "success") {
-          resultDiv.className = "result-card success";
-          resultDiv.innerHTML = `
-            <div class="status-badge">VALID PASS - CHECKED IN</div>
-            <div class="guest-name">${data.name}</div>
-            <div class="info-line"><strong>Designation:</strong> ${data.rank || '-'}</div>
-            <div class="info-line"><strong>Agency/Dept:</strong> ${data.dept || '-'}</div>
-            <div class="time-stamp">RECORDED AT: ${data.checkInTime}</div>
-          `;
-        } else if (data.status === "warning") {
-          resultDiv.className = "result-card warning";
-          resultDiv.innerHTML = `
-            <div class="status-badge">ALREADY CHECKED IN</div>
-            <div class="guest-name">${data.name}</div>
-            <div class="info-line"><strong>Designation:</strong> ${data.rank || '-'}</div>
-            <div class="info-line"><strong>Agency/Dept:</strong> ${data.dept || '-'}</div>
-            <div class="time-stamp">INITIAL CHECK-IN: ${data.checkInTime || 'RECORDED'}</div>
-          `;
-        } else {
-          resultDiv.className = "result-card error";
-          resultDiv.innerHTML = `
-            <div class="status-badge">INVALID PASS</div>
-            <div class="info-line">${data.message || 'System error encountered'}</div>
-          `;
-        }
-      })
-      .catch(error => {
-        console.error("Fetch Error:", error);
+      script.onerror = function() {
         document.getElementById("reset-btn").style.display = "block";
         resultDiv.className = "result-card error";
         resultDiv.innerHTML = `
           <div class="status-badge">CONNECTION ERROR</div>
-          <div class="info-line">Could not connect to database. Please check connectivity.</div>
+          <div class="info-line">Could not connect to Google Apps Script. Ensure Web App is deployed to 'Anyone'.</div>
         `;
-      });
+      };
+
+      document.body.appendChild(script);
     }
 
     function resetScanner() {
@@ -284,7 +272,6 @@
       html5QrcodeScanner.render(onScanSuccess);
     }
 
-    // Papar scanner
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
