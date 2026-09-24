@@ -114,8 +114,8 @@
   </div>
 
   <script>
-    // YOUR DEPLOYED GOOGLE APPS SCRIPT EXEC URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVU3KaCE1h4rHJky3qOeollVDUiELpMLHh8oWtrpGBAo6qBJP-p7nnQ9QEkkAkJMyKog/exec";
+    // YOUR UPDATED GOOGLE APPS SCRIPT WEB APP URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxC4kQPWBZIO4xRYsaLjOEAK_bRHmwN9pBfaCUJ9FqqJgO_7h8SuzwTV0KAVUIqHNVN5Q/exec";
 
     let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
     let isProcessing = false;
@@ -124,7 +124,7 @@
       if (isProcessing) return;
       isProcessing = true;
 
-      // Stop scanner while processing
+      // Stop scanner camera while submitting data
       html5QrcodeScanner.clear();
 
       const resultDiv = document.getElementById("result");
@@ -132,7 +132,7 @@
       resultDiv.style.display = "block";
       resultDiv.innerHTML = "<p>⏳ Updating Google Sheet attendance...</p>";
 
-      // Send HTTP GET request to Google Apps Script
+      // Send GET request to your Google Apps Script endpoint
       const targetUrl = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&t=${new Date().getTime()}`;
 
       fetch(targetUrl, {
@@ -173,7 +173,7 @@
         console.error("Fetch Error:", error);
         document.getElementById("reset-btn").style.display = "block";
         resultDiv.className = "result-box error";
-        resultDiv.innerHTML = `<h3>❌ Connection Failed</h3><p>Could not update Google Sheet. Verify internet connection.</p>`;
+        resultDiv.innerHTML = `<h3>❌ Connection Failed</h3><p>Could not update Google Sheet. Please check internet connection.</p>`;
       });
     }
 
@@ -184,7 +184,7 @@
       html5QrcodeScanner.render(onScanSuccess);
     }
 
-    // Initialize scanner
+    // Initialize scanner on page load
     html5QrcodeScanner.render(onScanSuccess);
   </script>
 </body>
