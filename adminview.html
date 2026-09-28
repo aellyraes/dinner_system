@@ -199,7 +199,6 @@
     });
     let isProcessing = false;
 
-    // Response handler daripada Apps Script
     window.handleAppsScriptResponse = function(data) {
       document.getElementById("reset-btn").style.display = "block";
       const resultDiv = document.getElementById("result");
@@ -248,7 +247,6 @@
       const existingScript = document.getElementById("jsonp-script");
       if (existingScript) existingScript.remove();
 
-      // JSONP Injection
       const script = document.createElement("script");
       script.id = "jsonp-script";
       script.src = `${SCRIPT_URL}?data=${encodeURIComponent(decodedText)}&callback=handleAppsScriptResponse&t=${new Date().getTime()}`;
